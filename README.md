@@ -2,6 +2,10 @@
 
 A maze game implementation featuring a Q-learning AI agent that learns to navigate through a maze, collect coins, avoid an NPC enemy, and reach the exit to maximize its score.
 
+**Two versions available:**
+- **HTML/JavaScript version** - Play instantly in your browser (no installation!)
+- **Python version** - Full-featured with training analytics and matplotlib plots
+
 ## Features
 
 - **Dynamic Maze Generation**: Randomly generated mazes with walls and obstacles
@@ -9,8 +13,8 @@ A maze game implementation featuring a Q-learning AI agent that learns to naviga
 - **NPC Enemy**: Chasing enemy that tries to catch the player
 - **Coin Collection**: Collectible coins that increase the score
 - **Exit Goal**: Agent must reach the exit to win
-- **Visualization**: PyGame-based visualization to watch the agent play
-- **Training Analytics**: Plots showing learning progress over time
+- **Visualization**: Beautiful HTML5 Canvas or PyGame graphics
+- **Training Analytics**: Real-time training progress and statistics
 
 ## Game Objectives
 
@@ -21,7 +25,23 @@ The AI agent has three competing objectives:
 
 The agent learns to balance these objectives through trial and error using Q-learning.
 
-## Installation
+## Quick Start (HTML Version - No Installation!)
+
+**The easiest way to play:**
+
+1. Simply open `index.html` in any modern web browser
+2. Click **"Manual"** to play yourself with arrow keys
+3. Click **"AI Play"** to watch the AI (after training)
+4. Click **"Train AI"** to train the Q-learning agent right in your browser
+
+**Features of HTML version:**
+- No installation or dependencies required
+- Beautiful, responsive UI
+- Training happens in your browser
+- Progress saved automatically in localStorage
+- Perfect for quick demos and learning
+
+## Installation (Python Version)
 
 1. Clone this repository
 2. Install the required dependencies:
@@ -172,14 +192,23 @@ Where:
 
 ```
 maze-game/
-├── maze_game.py          # Game environment implementation
-├── q_learning_agent.py   # Q-learning agent implementation
-├── train.py              # Training script
-├── play.py               # Visualization and play script
-├── requirements.txt      # Python dependencies
-├── README.md            # This file
-├── trained_agent.pkl    # Saved trained model (after training)
-└── training_results.png # Training plots (after training)
+├── HTML/JavaScript Version:
+│   ├── index.html           # Main HTML page with UI
+│   ├── maze_game.js         # Game logic (JavaScript)
+│   ├── q_learning.js        # Q-learning agent (JavaScript)
+│   └── game_controller.js   # Game controller and rendering
+│
+├── Python Version:
+│   ├── maze_game.py         # Game environment implementation
+│   ├── q_learning_agent.py  # Q-learning agent implementation
+│   ├── train.py             # Training script with plots
+│   ├── play.py              # PyGame visualization
+│   ├── quick_demo.py        # Quick text-based demo
+│   ├── requirements.txt     # Python dependencies
+│   ├── trained_agent.pkl    # Saved model (after training)
+│   └── training_results.png # Training plots (after training)
+│
+└── README.md               # This file
 ```
 
 ## Training Tips
