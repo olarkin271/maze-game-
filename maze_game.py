@@ -68,19 +68,19 @@ class MazeGame:
         maze[:, 0] = self.WALL
         maze[:, -1] = self.WALL
 
-        # Add some internal walls to make it more interesting
+        # Add some internal walls to make it more interesting (reduced density for more escape routes)
         # Vertical walls
         if self.width > 6:
             for i in range(2, self.height - 2, 3):
                 for j in range(1, self.width // 2):
-                    if random.random() < 0.6:
+                    if random.random() < 0.25:  # Reduced from 0.6 to 0.25 for more open space
                         maze[i, j * 2] = self.WALL
 
         # Horizontal walls
         if self.height > 6:
             for i in range(1, self.height // 2):
                 for j in range(2, self.width - 2, 3):
-                    if random.random() < 0.6:
+                    if random.random() < 0.25:  # Reduced from 0.6 to 0.25 for more open space
                         maze[i * 2, j] = self.WALL
 
         return maze
@@ -181,23 +181,19 @@ class MazeGame:
         return True
 
     def _move_npc(self):
-        """Move NPC towards player using simple pathfinding"""
-        # Simple chase AI: move towards player
-        best_action = None
-        best_distance = float('inf')
+        """Move NPC randomly around the board"""
+        # Random movement: NPC moves in random valid directions
+        valid_actions = []
 
         for action in self.ACTIONS:
             new_pos = self._get_new_position(self.npc_pos, action)
             if self._is_valid_move(new_pos):
-                # Calculate Manhattan distance to player
-                distance = abs(new_pos[0] - self.player_pos[0]) + abs(new_pos[1] - self.player_pos[1])
-                if distance < best_distance:
-                    best_distance = distance
-                    best_action = action
+                valid_actions.append(action)
 
-        # Move NPC with 80% probability (makes it slightly less perfect)
-        if best_action is not None and random.random() < 0.8:
-            self.npc_pos = self._get_new_position(self.npc_pos, best_action)
+        # Move NPC to a random valid position
+        if valid_actions:
+            action = random.choice(valid_actions)
+            self.npc_pos = self._get_new_position(self.npc_pos, action)
 
     def get_state_representation(self) -> np.ndarray:
         """

@@ -66,11 +66,11 @@ class MazeGame {
             maze[i][this.width - 1] = MazeGame.WALL;
         }
 
-        // Add internal walls
+        // Add internal walls (reduced density for more escape routes)
         if (this.width > 6) {
             for (let i = 2; i < this.height - 2; i += 3) {
                 for (let j = 1; j < this.width / 2; j++) {
-                    if (Math.random() < 0.6) {
+                    if (Math.random() < 0.25) {  // Reduced from 0.6 to 0.25 for more open space
                         maze[i][j * 2] = MazeGame.WALL;
                     }
                 }
@@ -80,7 +80,7 @@ class MazeGame {
         if (this.height > 6) {
             for (let i = 1; i < this.height / 2; i++) {
                 for (let j = 2; j < this.width - 2; j += 3) {
-                    if (Math.random() < 0.6) {
+                    if (Math.random() < 0.25) {  // Reduced from 0.6 to 0.25 for more open space
                         maze[i * 2][j] = MazeGame.WALL;
                     }
                 }
@@ -205,24 +205,20 @@ class MazeGame {
     }
 
     _moveNPC() {
-        let bestAction = null;
-        let bestDistance = Infinity;
+        // Random movement: NPC moves in random valid directions
+        const validActions = [];
 
         for (const action of MazeGame.ACTIONS) {
             const newPos = this._getNewPosition(this.npcPos, action);
             if (this._isValidMove(newPos)) {
-                const distance = Math.abs(newPos.row - this.playerPos.row) +
-                               Math.abs(newPos.col - this.playerPos.col);
-                if (distance < bestDistance) {
-                    bestDistance = distance;
-                    bestAction = action;
-                }
+                validActions.push(action);
             }
         }
 
-        // Move with 80% probability
-        if (bestAction !== null && Math.random() < 0.8) {
-            this.npcPos = this._getNewPosition(this.npcPos, bestAction);
+        // Move NPC to a random valid position
+        if (validActions.length > 0) {
+            const action = validActions[Math.floor(Math.random() * validActions.length)];
+            this.npcPos = this._getNewPosition(this.npcPos, action);
         }
     }
 
