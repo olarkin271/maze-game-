@@ -32,8 +32,8 @@ class MazeGame {
         this.exitPos = {row: this.height - 2, col: this.width - 2};
         this.maze[this.exitPos.row][this.exitPos.col] = MazeGame.EXIT;
 
-        // Place NPC
-        this.npcPos = this._getRandomEmptyPos(4);
+        // Place NPC far from player for easier gameplay
+        this.npcPos = this._getRandomEmptyPos(8);
 
         // Place coins
         this.coins = [];
@@ -205,6 +205,11 @@ class MazeGame {
     }
 
     _moveNPC() {
+        // NPC only moves 30% of the time to make it easier to avoid
+        if (Math.random() > 0.3) {
+            return;
+        }
+
         // Random movement: NPC moves in random valid directions
         const validActions = [];
 

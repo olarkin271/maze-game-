@@ -40,8 +40,8 @@ class MazeGame:
         self.exit_pos = [self.height - 2, self.width - 2]
         self.maze[self.exit_pos[0], self.exit_pos[1]] = self.EXIT
 
-        # Place NPC at a random position (not too close to player)
-        self.npc_pos = self._get_random_empty_pos(min_distance_from_player=4)
+        # Place NPC at a random position (far from player for easier gameplay)
+        self.npc_pos = self._get_random_empty_pos(min_distance_from_player=8)
 
         # Place coins
         self.coins = []
@@ -181,7 +181,11 @@ class MazeGame:
         return True
 
     def _move_npc(self):
-        """Move NPC randomly around the board"""
+        """Move NPC randomly around the board (only moves 30% of the time)"""
+        # NPC only moves 30% of the time to make it easier to avoid
+        if random.random() > 0.3:
+            return
+
         # Random movement: NPC moves in random valid directions
         valid_actions = []
 
