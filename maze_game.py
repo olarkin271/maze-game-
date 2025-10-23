@@ -56,6 +56,13 @@ class MazeGame:
         self.caught = False
         self.won = False
 
+        # Track previous position to penalize staying in place
+        self.prev_player_pos = self.player_pos.copy()
+
+        # Track visit counts for each position to encourage exploration
+        self.visit_counts = {}
+        self._increment_visit_count(self.player_pos)
+
         return self._get_state()
 
     def _create_maze(self) -> np.ndarray:
@@ -112,6 +119,14 @@ class MazeGame:
             'maze': self.maze.copy()
         }
 
+    def _increment_visit_count(self, pos: List[int]) -> int:
+        """Increment and return visit count for a position"""
+        pos_tuple = tuple(pos)
+        if pos_tuple not in self.visit_counts:
+            self.visit_counts[pos_tuple] = 0
+        self.visit_counts[pos_tuple] += 1
+        return self.visit_counts[pos_tuple]
+
     def step(self, action: int) -> Tuple[dict, float, bool]:
         """
         Take a step in the environment
@@ -120,12 +135,25 @@ class MazeGame:
         if self.caught or self.won:
             return self._get_state(), 0, True
 
+        # Store previous position before moving
+        self.prev_player_pos = self.player_pos.copy()
+
         # Move player
         new_pos = self._get_new_position(self.player_pos, action)
         if self._is_valid_move(new_pos):
             self.player_pos = new_pos
 
         reward = -0.1  # Small negative reward for each step (encourages efficiency)
+
+        # Penalize staying in the same position (didn't move)
+        if self.player_pos == self.prev_player_pos:
+            reward -= 0.5  # Penalty for staying still
+
+        # Track position visits and penalize revisiting
+        visit_count = self._increment_visit_count(self.player_pos)
+        if visit_count > 1:
+            # Increasing penalty for revisiting the same spot
+            reward -= 0.2 * (visit_count - 1)
 
         # Check if player collected a coin
         if self.player_pos in self.coins:

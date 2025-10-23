@@ -49,6 +49,13 @@ class MazeGame {
         this.caught = false;
         this.won = false;
 
+        // Track previous position to penalize staying in place
+        this.prevPlayerPos = {...this.playerPos};
+
+        // Track visit counts for each position to encourage exploration
+        this.visitCounts = {};
+        this._incrementVisitCount(this.playerPos);
+
         return this.getState();
     }
 
@@ -122,10 +129,22 @@ class MazeGame {
         };
     }
 
+    _incrementVisitCount(pos) {
+        const key = `${pos.row},${pos.col}`;
+        if (!(key in this.visitCounts)) {
+            this.visitCounts[key] = 0;
+        }
+        this.visitCounts[key]++;
+        return this.visitCounts[key];
+    }
+
     step(action) {
         if (this.caught || this.won) {
             return {state: this.getState(), reward: 0, done: true};
         }
+
+        // Store previous position before moving
+        this.prevPlayerPos = {...this.playerPos};
 
         // Move player
         const newPos = this._getNewPosition(this.playerPos, action);
@@ -134,6 +153,19 @@ class MazeGame {
         }
 
         let reward = -0.1; // Small penalty for each step
+
+        // Penalize staying in the same position (didn't move)
+        if (this.playerPos.row === this.prevPlayerPos.row &&
+            this.playerPos.col === this.prevPlayerPos.col) {
+            reward -= 0.5; // Penalty for staying still
+        }
+
+        // Track position visits and penalize revisiting
+        const visitCount = this._incrementVisitCount(this.playerPos);
+        if (visitCount > 1) {
+            // Increasing penalty for revisiting the same spot
+            reward -= 0.2 * (visitCount - 1);
+        }
 
         // Check coin collection
         for (let i = 0; i < this.coins.length; i++) {
