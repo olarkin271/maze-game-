@@ -1,0 +1,419 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>Maze Game with Q-Learning AI</title>
+    <style>
+        * {
+            margin: 0;
+            padding: 0;
+            box-sizing: border-box;
+        }
+
+        body {
+            font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif;
+            background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+            display: flex;
+            justify-content: center;
+            align-items: center;
+            min-height: 100vh;
+            padding: 20px;
+        }
+
+        .container {
+            background: white;
+            border-radius: 20px;
+            box-shadow: 0 20px 60px rgba(0, 0, 0, 0.3);
+            padding: 30px;
+            max-width: 1200px;
+        }
+
+        h1 {
+            text-align: center;
+            color: #333;
+            margin-bottom: 10px;
+            font-size: 2.5em;
+        }
+
+        .subtitle {
+            text-align: center;
+            color: #666;
+            margin-bottom: 20px;
+            font-size: 1.1em;
+        }
+
+        .game-area {
+            display: flex;
+            gap: 20px;
+            margin-bottom: 20px;
+        }
+
+        .canvas-container {
+            flex: 1;
+        }
+
+        canvas {
+            border: 3px solid #333;
+            border-radius: 10px;
+            display: block;
+            background: #f5f5f5;
+            box-shadow: 0 4px 6px rgba(0, 0, 0, 0.1);
+        }
+
+        .controls {
+            flex: 0 0 300px;
+            display: flex;
+            flex-direction: column;
+            gap: 15px;
+        }
+
+        .panel {
+            background: #f8f9fa;
+            padding: 15px;
+            border-radius: 10px;
+            border: 2px solid #e0e0e0;
+        }
+
+        .panel h3 {
+            margin-bottom: 10px;
+            color: #333;
+            font-size: 1.2em;
+        }
+
+        .stats {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .stat-item {
+            display: flex;
+            justify-content: space-between;
+            padding: 8px;
+            background: white;
+            border-radius: 5px;
+            border: 1px solid #ddd;
+        }
+
+        .stat-label {
+            font-weight: bold;
+            color: #555;
+        }
+
+        .stat-value {
+            color: #667eea;
+            font-weight: bold;
+        }
+
+        button {
+            padding: 12px 20px;
+            font-size: 16px;
+            border: none;
+            border-radius: 8px;
+            cursor: pointer;
+            font-weight: bold;
+            transition: all 0.3s;
+            box-shadow: 0 2px 4px rgba(0, 0, 0, 0.1);
+        }
+
+        button:hover {
+            transform: translateY(-2px);
+            box-shadow: 0 4px 8px rgba(0, 0, 0, 0.2);
+        }
+
+        button:active {
+            transform: translateY(0);
+        }
+
+        .btn-primary {
+            background: #667eea;
+            color: white;
+        }
+
+        .btn-primary:hover {
+            background: #5568d3;
+        }
+
+        .btn-success {
+            background: #48bb78;
+            color: white;
+        }
+
+        .btn-success:hover {
+            background: #38a169;
+        }
+
+        .btn-danger {
+            background: #f56565;
+            color: white;
+        }
+
+        .btn-danger:hover {
+            background: #e53e3e;
+        }
+
+        .btn-secondary {
+            background: #718096;
+            color: white;
+        }
+
+        .btn-secondary:hover {
+            background: #4a5568;
+        }
+
+        .button-group {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        .mode-buttons {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+
+        .legend {
+            display: flex;
+            flex-direction: column;
+            gap: 8px;
+        }
+
+        .legend-item {
+            display: flex;
+            align-items: center;
+            gap: 10px;
+            padding: 5px;
+        }
+
+        .legend-icon {
+            width: 30px;
+            height: 30px;
+            border-radius: 50%;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-weight: bold;
+            border: 2px solid #333;
+        }
+
+        .legend-icon.player {
+            background: #3b82f6;
+            color: white;
+        }
+
+        .legend-icon.npc {
+            background: #ef4444;
+            color: white;
+        }
+
+        .legend-icon.coin {
+            background: #fbbf24;
+            color: #333;
+        }
+
+        .legend-icon.exit {
+            background: #10b981;
+            color: white;
+        }
+
+        .legend-icon.wall {
+            background: #1f2937;
+            border-radius: 5px;
+        }
+
+        .status-message {
+            text-align: center;
+            padding: 15px;
+            border-radius: 10px;
+            font-size: 1.3em;
+            font-weight: bold;
+            margin-bottom: 15px;
+            display: none;
+        }
+
+        .status-message.won {
+            background: #d1fae5;
+            color: #065f46;
+            border: 2px solid #10b981;
+            display: block;
+        }
+
+        .status-message.lost {
+            background: #fee2e2;
+            color: #991b1b;
+            border: 2px solid #ef4444;
+            display: block;
+        }
+
+        .training-controls {
+            display: none;
+        }
+
+        .training-controls.active {
+            display: flex;
+            flex-direction: column;
+            gap: 10px;
+        }
+
+        input[type="number"] {
+            padding: 8px;
+            border: 2px solid #ddd;
+            border-radius: 5px;
+            font-size: 14px;
+            width: 100%;
+        }
+
+        .progress-bar {
+            width: 100%;
+            height: 20px;
+            background: #e0e0e0;
+            border-radius: 10px;
+            overflow: hidden;
+            margin: 10px 0;
+        }
+
+        .progress-fill {
+            height: 100%;
+            background: linear-gradient(90deg, #667eea 0%, #764ba2 100%);
+            transition: width 0.3s;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            color: white;
+            font-size: 12px;
+            font-weight: bold;
+        }
+
+        @media (max-width: 768px) {
+            .game-area {
+                flex-direction: column;
+            }
+
+            .controls {
+                flex: 1;
+            }
+        }
+    </style>
+</head>
+<body>
+    <div class="container">
+        <h1>🎮 Maze Game</h1>
+        <p class="subtitle">With Q-Learning AI Agent</p>
+
+        <div id="statusMessage" class="status-message"></div>
+
+        <div class="game-area">
+            <div class="canvas-container">
+                <canvas id="gameCanvas" width="600" height="600"></canvas>
+            </div>
+
+            <div class="controls">
+                <div class="panel">
+                    <h3>📊 Statistics</h3>
+                    <div class="stats">
+                        <div class="stat-item">
+                            <span class="stat-label">Score:</span>
+                            <span class="stat-value" id="score">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Steps:</span>
+                            <span class="stat-value" id="steps">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Coins:</span>
+                            <span class="stat-value" id="coins">0</span>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Mode:</span>
+                            <span class="stat-value" id="mode">Manual</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>🎮 Game Mode</h3>
+                    <div class="mode-buttons">
+                        <button class="btn-primary" onclick="setMode('manual')">
+                            👤 Manual
+                        </button>
+                        <button class="btn-success" onclick="setMode('ai')">
+                            🤖 AI Play
+                        </button>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>⚙️ Controls</h3>
+                    <div class="button-group">
+                        <button class="btn-secondary" onclick="resetGame()">
+                            🔄 New Game
+                        </button>
+                        <button class="btn-primary" onclick="trainAgent()">
+                            🧠 Train AI
+                        </button>
+                    </div>
+
+                    <div id="trainingControls" class="training-controls">
+                        <label>Training Episodes:</label>
+                        <input type="number" id="trainingEpisodes" value="1000" min="100" max="10000" step="100">
+                        <button class="btn-success" onclick="startTraining()">
+                            ▶️ Start Training
+                        </button>
+                        <button class="btn-danger" onclick="stopTraining()">
+                            ⏹️ Stop Training
+                        </button>
+                        <div class="progress-bar">
+                            <div class="progress-fill" id="trainingProgress" style="width: 0%">0%</div>
+                        </div>
+                        <div class="stat-item">
+                            <span class="stat-label">Win Rate:</span>
+                            <span class="stat-value" id="winRate">0%</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>📖 Legend</h3>
+                    <div class="legend">
+                        <div class="legend-item">
+                            <div class="legend-icon player">P</div>
+                            <span>Player / AI Agent</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-icon npc">N</div>
+                            <span>NPC Enemy</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-icon coin">C</div>
+                            <span>Coin (+10 pts)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-icon exit">E</div>
+                            <span>Exit (+100 pts)</span>
+                        </div>
+                        <div class="legend-item">
+                            <div class="legend-icon wall"></div>
+                            <span>Wall</span>
+                        </div>
+                    </div>
+                </div>
+
+                <div class="panel">
+                    <h3>ℹ️ How to Play</h3>
+                    <p style="font-size: 14px; line-height: 1.6; color: #555;">
+                        <strong>Manual Mode:</strong> Use arrow keys to move.<br><br>
+                        <strong>Goal:</strong> Collect coins and reach the exit while avoiding the red NPC!<br><br>
+                        <strong>Training:</strong> The AI learns to play using Q-learning reinforcement learning.
+                    </p>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <script src="maze_game.js"></script>
+    <script src="q_learning.js"></script>
+    <script src="game_controller.js"></script>
+</body>
+</html>
