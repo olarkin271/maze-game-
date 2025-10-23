@@ -143,6 +143,10 @@ class MazeGame {
             return {state: this.getState(), reward: 0, done: true};
         }
 
+        // Calculate distances before moving for progress rewards
+        const prevCoinDist = this._getNearestCoinDistance(this.playerPos);
+        const prevExitDist = this._getManhattanDistance(this.playerPos, this.exitPos);
+
         // Store previous position before moving
         this.prevPlayerPos = {...this.playerPos};
 
@@ -152,29 +156,30 @@ class MazeGame {
             this.playerPos = newPos;
         }
 
-        let reward = -0.1; // Small penalty for each step
+        let reward = -0.05; // Reduced step penalty to encourage exploration
 
         // Penalize staying in the same position (didn't move)
         if (this.playerPos.row === this.prevPlayerPos.row &&
             this.playerPos.col === this.prevPlayerPos.col) {
-            reward -= 0.5; // Penalty for staying still
-        }
-
-        // Track position visits and penalize revisiting
-        const visitCount = this._incrementVisitCount(this.playerPos);
-        if (visitCount > 1) {
-            // Increasing penalty for revisiting the same spot
-            reward -= 0.2 * (visitCount - 1);
+            reward -= 1.0; // Strong penalty for hitting walls
+        } else {
+            // Track position visits with lighter penalty
+            const visitCount = this._incrementVisitCount(this.playerPos);
+            if (visitCount > 2) { // Only penalize after 2nd visit
+                reward -= 0.1 * (visitCount - 2); // Lighter revisit penalty
+            }
         }
 
         // Check coin collection
+        let collectedCoin = false;
         for (let i = 0; i < this.coins.length; i++) {
             if (this.coins[i].row === this.playerPos.row &&
                 this.coins[i].col === this.playerPos.col) {
                 this.coins.splice(i, 1);
                 this.maze[this.playerPos.row][this.playerPos.col] = MazeGame.EMPTY;
                 this.score += 10;
-                reward += 10;
+                reward += 20; // Increased reward for collecting coin
+                collectedCoin = true;
                 break;
             }
         }
@@ -183,8 +188,35 @@ class MazeGame {
         if (this.playerPos.row === this.exitPos.row &&
             this.playerPos.col === this.exitPos.col) {
             this.won = true;
-            reward += 100;
+            // Bonus for winning with all coins collected
+            const coinBonus = this.coins.length === 0 ? 50 : 0;
+            // Bonus for winning quickly
+            const efficiencyBonus = Math.max(0, (this.maxSteps - this.steps) * 0.1);
+            reward += 150 + coinBonus + efficiencyBonus;
             return {state: this.getState(), reward: reward, done: true};
+        }
+
+        // Reward for making progress toward goals
+        if (!collectedCoin && !(this.playerPos.row === this.prevPlayerPos.row &&
+            this.playerPos.col === this.prevPlayerPos.col)) {
+            // If there are coins left, reward getting closer to nearest coin
+            if (this.coins.length > 0) {
+                const newCoinDist = this._getNearestCoinDistance(this.playerPos);
+                if (newCoinDist < prevCoinDist) {
+                    reward += 0.5; // Reward for moving toward coin
+                } else if (newCoinDist > prevCoinDist) {
+                    reward -= 0.3; // Penalty for moving away from coin
+                }
+            }
+            // If no coins left, reward getting closer to exit
+            else {
+                const newExitDist = this._getManhattanDistance(this.playerPos, this.exitPos);
+                if (newExitDist < prevExitDist) {
+                    reward += 1.0; // Strong reward for moving toward exit
+                } else if (newExitDist > prevExitDist) {
+                    reward -= 0.5; // Penalty for moving away from exit
+                }
+            }
         }
 
         // Move NPC
@@ -234,6 +266,17 @@ class MazeGame {
             return false;
         }
         return this.maze[pos.row][pos.col] !== MazeGame.WALL;
+    }
+
+    _getManhattanDistance(pos1, pos2) {
+        return Math.abs(pos1.row - pos2.row) + Math.abs(pos1.col - pos2.col);
+    }
+
+    _getNearestCoinDistance(pos) {
+        if (this.coins.length === 0) {
+            return 999; // Large value if no coins
+        }
+        return Math.min(...this.coins.map(coin => this._getManhattanDistance(pos, coin)));
     }
 
     _moveNPC() {

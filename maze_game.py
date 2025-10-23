@@ -135,6 +135,10 @@ class MazeGame:
         if self.caught or self.won:
             return self._get_state(), 0, True
 
+        # Calculate distances before moving for progress rewards
+        prev_coin_dist = self._get_nearest_coin_distance(self.player_pos)
+        prev_exit_dist = self._get_manhattan_distance(self.player_pos, self.exit_pos)
+
         # Store previous position before moving
         self.prev_player_pos = self.player_pos.copy()
 
@@ -143,30 +147,52 @@ class MazeGame:
         if self._is_valid_move(new_pos):
             self.player_pos = new_pos
 
-        reward = -0.1  # Small negative reward for each step (encourages efficiency)
+        reward = -0.05  # Reduced step penalty to encourage exploration
 
         # Penalize staying in the same position (didn't move)
         if self.player_pos == self.prev_player_pos:
-            reward -= 0.5  # Penalty for staying still
-
-        # Track position visits and penalize revisiting
-        visit_count = self._increment_visit_count(self.player_pos)
-        if visit_count > 1:
-            # Increasing penalty for revisiting the same spot
-            reward -= 0.2 * (visit_count - 1)
+            reward -= 1.0  # Strong penalty for hitting walls
+        else:
+            # Track position visits with lighter penalty
+            visit_count = self._increment_visit_count(self.player_pos)
+            if visit_count > 2:  # Only penalize after 2nd visit
+                reward -= 0.1 * (visit_count - 2)  # Lighter revisit penalty
 
         # Check if player collected a coin
+        collected_coin = False
         if self.player_pos in self.coins:
             self.coins.remove(self.player_pos)
             self.maze[self.player_pos[0], self.player_pos[1]] = self.EMPTY
             self.score += 10
-            reward += 10  # Reward for collecting coin
+            reward += 20  # Increased reward for collecting coin
+            collected_coin = True
 
         # Check if player reached exit
         if self.player_pos == self.exit_pos:
             self.won = True
-            reward += 100  # Big reward for winning
+            # Bonus for winning with all coins collected
+            coin_bonus = 50 if len(self.coins) == 0 else 0
+            # Bonus for winning quickly
+            efficiency_bonus = max(0, (self.max_steps - self.steps) * 0.1)
+            reward += 150 + coin_bonus + efficiency_bonus
             return self._get_state(), reward, True
+
+        # Reward for making progress toward goals
+        if not collected_coin and self.player_pos != self.prev_player_pos:
+            # If there are coins left, reward getting closer to nearest coin
+            if self.coins:
+                new_coin_dist = self._get_nearest_coin_distance(self.player_pos)
+                if new_coin_dist < prev_coin_dist:
+                    reward += 0.5  # Reward for moving toward coin
+                elif new_coin_dist > prev_coin_dist:
+                    reward -= 0.3  # Penalty for moving away from coin
+            # If no coins left, reward getting closer to exit
+            else:
+                new_exit_dist = self._get_manhattan_distance(self.player_pos, self.exit_pos)
+                if new_exit_dist < prev_exit_dist:
+                    reward += 1.0  # Strong reward for moving toward exit
+                elif new_exit_dist > prev_exit_dist:
+                    reward -= 0.5  # Penalty for moving away from exit
 
         # Move NPC (chases player)
         self._move_npc()
@@ -207,6 +233,16 @@ class MazeGame:
         if self.maze[row, col] == self.WALL:
             return False
         return True
+
+    def _get_manhattan_distance(self, pos1: List[int], pos2: List[int]) -> int:
+        """Calculate Manhattan distance between two positions"""
+        return abs(pos1[0] - pos2[0]) + abs(pos1[1] - pos2[1])
+
+    def _get_nearest_coin_distance(self, pos: List[int]) -> int:
+        """Get distance to nearest coin, or large value if no coins"""
+        if not self.coins:
+            return 999  # Large value if no coins
+        return min(self._get_manhattan_distance(pos, coin) for coin in self.coins)
 
     def _move_npc(self):
         """Move NPC randomly around the board (only moves 30% of the time)"""
