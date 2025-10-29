@@ -231,6 +231,30 @@ After 5000 episodes of training on a 10x10 maze:
 
 Performance improves with more training episodes!
 
+## MDP (Markov Decision Process) Documentation
+
+For detailed technical documentation about the reinforcement learning formulation:
+
+- **[MDP_SPECIFICATION.md](MDP_SPECIFICATION.md)** - Complete MDP formulation including:
+  - State space definition
+  - Action space
+  - Transition function
+  - Reward function
+  - Q-learning algorithm parameters
+  - Optimal policy characteristics
+
+- **[REWARD_STRUCTURE.md](REWARD_STRUCTURE.md)** - Detailed reward breakdown:
+  - Complete reward table
+  - Scenario examples
+  - Training progress expectations
+  - Reward tuning rationale
+
+These documents are useful for:
+- Understanding the learning algorithm
+- Tuning hyperparameters
+- Academic/educational purposes
+- Extending the implementation
+
 ## Troubleshooting
 
 ### Model not found error
