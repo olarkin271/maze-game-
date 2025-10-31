@@ -14,7 +14,7 @@ import os
 from collections import defaultdict
 
 def train_with_visualization(num_episodes: int = 2000,
-                             maze_size: tuple = (12, 12),
+                             maze_size: tuple = (18, 18),
                              num_coins: int = 5,
                              model_path: str = "trained_agent.pkl"):
     """
@@ -425,10 +425,10 @@ if __name__ == "__main__":
     parser = argparse.ArgumentParser(description='Train Q-learning agent with visualizations')
     parser.add_argument('--episodes', type=int, default=2000,
                         help='Number of episodes to train (default: 2000)')
-    parser.add_argument('--maze-height', type=int, default=12,
-                        help='Maze height (default: 12)')
-    parser.add_argument('--maze-width', type=int, default=12,
-                        help='Maze width (default: 12)')
+    parser.add_argument('--maze-height', type=int, default=18,
+                        help='Maze height (default: 18)')
+    parser.add_argument('--maze-width', type=int, default=18,
+                        help='Maze width (default: 18)')
     parser.add_argument('--coins', type=int, default=5,
                         help='Number of coins (default: 5)')
     parser.add_argument('--model-path', type=str, default='trained_agent.pkl',

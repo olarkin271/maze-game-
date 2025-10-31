@@ -52,7 +52,7 @@ class MazeGame:
 
         self.score = 0
         self.steps = 0
-        self.max_steps = 500
+        self.max_steps = 750  # Increased for larger maze (18x18)
         self.caught = False
         self.won = False
 
