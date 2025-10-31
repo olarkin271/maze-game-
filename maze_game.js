@@ -280,8 +280,8 @@ class MazeGame {
     }
 
     _moveNPC() {
-        // NPC only moves 30% of the time to make it easier to avoid
-        if (Math.random() > 0.3) {
+        // NPC only moves 5% of the time to make it much easier to avoid and allow wins
+        if (Math.random() > 0.05) {
             return;
         }
 

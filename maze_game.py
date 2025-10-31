@@ -245,9 +245,9 @@ class MazeGame:
         return min(self._get_manhattan_distance(pos, coin) for coin in self.coins)
 
     def _move_npc(self):
-        """Move NPC randomly around the board (only moves 30% of the time)"""
-        # NPC only moves 30% of the time to make it easier to avoid
-        if random.random() > 0.3:
+        """Move NPC randomly around the board (only moves 5% of the time)"""
+        # NPC only moves 5% of the time to make it much easier to avoid and allow wins
+        if random.random() > 0.05:
             return
 
         # Random movement: NPC moves in random valid directions
