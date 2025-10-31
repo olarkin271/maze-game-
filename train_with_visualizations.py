@@ -77,6 +77,7 @@ def train_with_visualization(num_episodes: int = 2000,
 
             total_reward += reward
             state = next_state
+            state_dict = next_state_dict  # Update state_dict to track final state
             steps += 1
 
         # Decay epsilon
