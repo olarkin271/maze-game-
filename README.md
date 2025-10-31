@@ -55,12 +55,31 @@ Requirements:
 - numpy
 - pygame
 - matplotlib
+- seaborn (for visualizations)
 
 ## Usage
 
-### 1. Train the Agent
+### 1. Train the Agent (with Visualizations) 📊
 
-Train the Q-learning agent for a specified number of episodes:
+**Recommended:** Train with comprehensive visualizations to track learning progress:
+
+```bash
+# Train and generate all visualizations
+python train_with_visualizations.py --episodes 2000
+
+# This will create:
+# - visualizations/training_dashboard.png (win rate, rewards, Q-table growth)
+# - visualizations/q_value_heatmap.png (learned state values heatmap)
+# - visualizations/q_value_evolution.png (Q-values over time)
+# - visualizations/performance_distributions.png (statistical analysis)
+# - visualizations/learning_phases.png (phase comparison)
+```
+
+See **[VISUALIZATION_GUIDE.md](VISUALIZATION_GUIDE.md)** for detailed explanation of all plots and how to interpret them.
+
+### 1b. Train the Agent (Basic)
+
+Basic training without visualizations:
 
 ```bash
 # Basic training (5000 episodes)

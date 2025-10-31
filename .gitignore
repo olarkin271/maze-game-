@@ -26,6 +26,7 @@ wheels/
 # Training artifacts
 trained_agent.pkl
 training_results.png
+visualizations/
 
 # IDE
 .vscode/
