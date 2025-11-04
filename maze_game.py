@@ -63,6 +63,10 @@ class MazeGame:
         self.visit_counts = {}
         self._increment_visit_count(self.player_pos)
 
+        # Track recent position history to detect oscillation/loops
+        self.position_history = [tuple(self.player_pos)]  # Store as tuples for comparison
+        self.max_history = 10  # Track last 10 positions
+
         return self._get_state()
 
     def _create_maze(self) -> np.ndarray:
@@ -147,16 +151,25 @@ class MazeGame:
         if self._is_valid_move(new_pos):
             self.player_pos = new_pos
 
-        reward = -0.05  # Reduced step penalty to encourage exploration
+        reward = -0.1  # Small step penalty to encourage efficiency
 
         # Penalize staying in the same position (didn't move)
         if self.player_pos == self.prev_player_pos:
-            reward -= 1.0  # Strong penalty for hitting walls
+            reward -= 2.0  # Strong penalty for hitting walls/not moving
         else:
-            # Track position visits with lighter penalty
+            # Update position history for oscillation detection
+            self.position_history.append(tuple(self.player_pos))
+            if len(self.position_history) > self.max_history:
+                self.position_history.pop(0)  # Keep only recent history
+
+            # Track position visits with moderate penalties
             visit_count = self._increment_visit_count(self.player_pos)
-            if visit_count > 2:  # Only penalize after 2nd visit
-                reward -= 0.1 * (visit_count - 2)  # Lighter revisit penalty
+            if visit_count > 2:  # Penalize after 2nd revisit (3rd visit)
+                reward -= 0.3 * (visit_count - 2)  # Moderate revisit penalty
+
+            # Apply oscillation penalty
+            oscillation_penalty = self._detect_oscillation()
+            reward += oscillation_penalty
 
         # Check if player collected a coin
         collected_coin = False
@@ -183,16 +196,16 @@ class MazeGame:
             if self.coins:
                 new_coin_dist = self._get_nearest_coin_distance(self.player_pos)
                 if new_coin_dist < prev_coin_dist:
-                    reward += 0.5  # Reward for moving toward coin
+                    reward += 1.0  # Stronger reward for moving toward coin
                 elif new_coin_dist > prev_coin_dist:
-                    reward -= 0.3  # Penalty for moving away from coin
+                    reward -= 0.5  # Penalty for moving away from coin
             # If no coins left, reward getting closer to exit
             else:
                 new_exit_dist = self._get_manhattan_distance(self.player_pos, self.exit_pos)
                 if new_exit_dist < prev_exit_dist:
-                    reward += 1.0  # Strong reward for moving toward exit
+                    reward += 2.0  # Very strong reward for moving toward exit
                 elif new_exit_dist > prev_exit_dist:
-                    reward -= 0.5  # Penalty for moving away from exit
+                    reward -= 1.0  # Strong penalty for moving away from exit
 
         # Move NPC (chases player)
         self._move_npc()
@@ -243,6 +256,29 @@ class MazeGame:
         if not self.coins:
             return 999  # Large value if no coins
         return min(self._get_manhattan_distance(pos, coin) for coin in self.coins)
+
+    def _detect_oscillation(self) -> float:
+        """
+        Detect if agent is oscillating between same positions
+        Returns penalty value based on oscillation severity
+        """
+        if len(self.position_history) < 4:
+            return 0.0
+
+        current_pos = self.position_history[-1]
+
+        # Check if oscillating between 2 positions (A -> B -> A -> B)
+        if len(self.position_history) >= 4:
+            if (self.position_history[-1] == self.position_history[-3] and
+                self.position_history[-2] == self.position_history[-4]):
+                return -1.5  # Moderate penalty for 2-position oscillation
+
+        # Check if in a small loop (visiting same position within last 5 steps)
+        recent_positions = self.position_history[-5:]
+        if recent_positions.count(current_pos) >= 3:
+            return -1.0  # Light penalty for tight loops
+
+        return 0.0
 
     def _move_npc(self):
         """Move NPC randomly with very low probability for easier gameplay"""
